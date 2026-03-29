@@ -25,6 +25,7 @@ packages = ["src/yt_transcription_summarizer"]
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "pytest-cov>=6.0.0",
 ]
 
 [tool.uv.sources]
