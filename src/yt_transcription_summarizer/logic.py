@@ -2,7 +2,7 @@ import os
 import re
 from datetime import date
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Annotated, Optional, Dict, Any
 
 import typer
 import yt_dlp
@@ -92,12 +92,12 @@ category: "[[YouTube]]"
 def summarize(
     url: str = typer.Argument(..., help="YouTube video URL."),
     output_dir: Optional[Path] = typer.Option(None, "--output", "-o", help="Target folder for the note."),
-    provider: str = provider_option(PROVIDERS),
-    model: Optional[str] = model_option(),
-    dry_run: bool = dry_run_option(),
-    no_llm: bool = no_llm_option(),
-    verbose: bool = verbose_option(),
-    debug: bool = debug_option(),
+    provider: Annotated[str, provider_option(PROVIDERS)] = os.environ.get("MODEL_PROVIDER", "ollama"),
+    model: Annotated[Optional[str], model_option()] = None,
+    dry_run: Annotated[bool, dry_run_option()] = False,
+    no_llm: Annotated[bool, no_llm_option()] = False,
+    verbose: Annotated[bool, verbose_option()] = False,
+    debug: Annotated[bool, debug_option()] = False,
 ):
     """Summarize a YouTube video."""
     dry_run = resolve_dry_run(dry_run, no_llm)
