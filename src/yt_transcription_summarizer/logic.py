@@ -26,6 +26,22 @@ from .schema import VideoSummary
 from .prompts import build_system_prompt, build_user_prompt
 
 _TOOL = register_tool("yt-transcription-summarizer")
+
+
+class YtSummarizerError(Exception):
+    """Base typed error for yt-transcription-summarizer."""
+
+
+class VideoFetchError(YtSummarizerError):
+    """Raised when video metadata or transcript fetch fails."""
+
+
+class ProviderSetupError(YtSummarizerError):
+    """Raised when provider resolution fails."""
+
+
+class LLMRunError(YtSummarizerError):
+    """Raised when the LLM summarization call fails."""
 console = Console()
 app = typer.Typer(help="YouTube Transcription Summarizer — fetch a YouTube transcript and create an Obsidian resource note.")
 
@@ -107,16 +123,22 @@ def summarize(
         if verbose:
             console.print(f"Fetching info for video {video_id}...")
         video_info = get_video_info(url)
-        
+
         if verbose:
             console.print(f"Fetching transcript for {video_info['title']}...")
         transcript = get_transcript(video_id)
+    except VideoFetchError as e:
+        console.print(f"[red]Error fetching video data: {e}[/red]")
+        raise typer.Exit(1)
     except Exception as e:
         console.print(f"[red]Error fetching video data: {e}[/red]")
         raise typer.Exit(1)
 
     try:
         llm = resolve_provider(PROVIDERS, provider, model, debug=debug, no_llm=no_llm)
+    except ProviderSetupError as e:
+        console.print(f"[red]Error initializing provider: {e}[/red]")
+        raise typer.Exit(1)
     except Exception as e:
         console.print(f"[red]Error initializing provider: {e}[/red]")
         raise typer.Exit(1)
@@ -132,6 +154,9 @@ def summarize(
             response = llm.complete(system, user, response_model=VideoSummary)
             summary = response
             run.item_count = 1
+    except LLMRunError as e:
+        console.print(f"[red]Error during LLM processing: {e}[/red]")
+        raise typer.Exit(1)
     except Exception as e:
         console.print(f"[red]Error during LLM processing: {e}[/red]")
         raise typer.Exit(1)
