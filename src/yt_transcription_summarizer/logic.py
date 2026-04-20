@@ -42,8 +42,13 @@ class ProviderSetupError(YtSummarizerError):
 
 class LLMRunError(YtSummarizerError):
     """Raised when the LLM summarization call fails."""
+
+
 console = Console()
-app = typer.Typer(help="YouTube Transcription Summarizer — fetch a YouTube transcript and create an Obsidian resource note.")
+app = typer.Typer(
+    help="YouTube Transcription Summarizer — fetch a YouTube transcript and create an Obsidian resource note."
+)
+
 
 def extract_video_id(url: str) -> str:
     """Extract video ID from various YouTube URL formats."""
@@ -57,32 +62,37 @@ def extract_video_id(url: str) -> str:
             return match.group(1)
     raise ValueError(f"Could not extract video ID from URL: {url}")
 
+
 def get_video_info(url: str) -> Dict[str, Any]:
     """Get video metadata using yt-dlp."""
-    ydl_opts = {'quiet': True, 'no_warnings': True}
+    ydl_opts = {"quiet": True, "no_warnings": True}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
         return {
             "title": info.get("title"),
             "channel": info.get("uploader"),
             "url": url,
-            "id": info.get("id")
+            "id": info.get("id"),
         }
+
 
 def get_transcript(video_id: str) -> str:
     """Fetch transcript using youtube-transcript-api."""
     try:
-        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
-        return " ".join([t['text'] for t in transcript_list])
+        fetched = YouTubeTranscriptApi().fetch(video_id)
+        return " ".join([snippet.text for snippet in fetched])
     except Exception as e:
         raise RuntimeError(f"Failed to fetch transcript: {e}")
+
 
 def format_obsidian_note(summary: VideoSummary, url: str) -> str:
     """Format the summary into an Obsidian markdown note."""
     today = date.today().isoformat()
-    concepts = "\n".join([f"- **{c.timestamp}**: {c.concept}" for c in summary.key_concepts])
+    concepts = "\n".join(
+        [f"- **{c.timestamp}**: {c.concept}" for c in summary.key_concepts]
+    )
     quotes = "\n".join([f"> {q}" for q in summary.key_quotes])
-    
+
     note = f"""---
 date: {today}
 source_url: {url}
@@ -104,11 +114,16 @@ category: "[[YouTube]]"
 """
     return note
 
+
 @app.command()
 def summarize(
     url: str = typer.Argument(..., help="YouTube video URL."),
-    output_dir: Optional[Path] = typer.Option(None, "--output", "-o", help="Target folder for the note."),
-    provider: Annotated[str, provider_option(PROVIDERS)] = os.environ.get("MODEL_PROVIDER", "ollama"),
+    output_dir: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="Target folder for the note."
+    ),
+    provider: Annotated[str, provider_option(PROVIDERS)] = os.environ.get(
+        "MODEL_PROVIDER", "ollama"
+    ),
     model: Annotated[Optional[str], model_option()] = None,
     dry_run: Annotated[bool, dry_run_option()] = False,
     no_llm: Annotated[bool, no_llm_option()] = False,
@@ -150,9 +165,15 @@ def summarize(
         console.print(f"Summarizing using {llm.model}...")
 
     try:
-        with timed_run("yt-transcription-summarizer", llm.model, source_location=url) as run:
+        with timed_run(
+            "yt-transcription-summarizer", llm.model, source_location=url
+        ) as run:
             response = llm.complete(system, user, response_model=VideoSummary)
-            summary = response
+            summary = (
+                response
+                if isinstance(response, VideoSummary)
+                else VideoSummary(**response)
+            )
             run.item_count = 1
     except LLMRunError as e:
         console.print(f"[red]Error during LLM processing: {e}[/red]")
@@ -169,19 +190,26 @@ def summarize(
     else:
         vault_path_str = os.getenv("OBSIDIAN_VAULT_PATH")
         if not vault_path_str:
-            console.print("[red]Error: OBSIDIAN_VAULT_PATH not set. Printing to stdout.[/red]")
+            console.print(
+                "[red]Error: OBSIDIAN_VAULT_PATH not set. Printing to stdout.[/red]"
+            )
             console.print(note_content)
             return
 
         vault_path = Path(vault_path_str)
-        target_path = output_dir if output_dir and output_dir.is_absolute() else (vault_path / (output_dir or "YouTube"))
+        target_path = (
+            output_dir
+            if output_dir and output_dir.is_absolute()
+            else (vault_path / (output_dir or "youtube"))
+        )
         target_path.mkdir(parents=True, exist_ok=True)
-        
+
         filename = f"{re.sub(r'[\\/*?:\'\"<>|]', '', summary.video_title)}.md"
         file_path = target_path / filename
-        
+
         file_path.write_text(note_content)
         console.print(f"[green]Note saved to: {file_path}[/green]")
+
 
 if __name__ == "__main__":
     app()
