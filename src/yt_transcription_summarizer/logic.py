@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Annotated, Optional, Dict, Any
 
@@ -73,6 +73,7 @@ def get_video_info(url: str) -> Dict[str, Any]:
             "channel": info.get("uploader"),
             "url": url,
             "id": info.get("id"),
+            "upload_date": info.get("upload_date"),  # YYYYMMDD
         }
 
 
@@ -85,13 +86,30 @@ def get_transcript(video_id: str) -> str:
         raise RuntimeError(f"Failed to fetch transcript: {e}")
 
 
-def format_obsidian_note(summary: VideoSummary, url: str) -> str:
+def _format_apa_citation(
+    channel: str, upload_date: str | None, title: str, url: str
+) -> str:
+    """Build an APA 7 citation for a YouTube video."""
+    if upload_date:
+        d = datetime.strptime(upload_date, "%Y%m%d")
+        date_str = d.strftime("%Y, %B ") + str(d.day)
+    else:
+        date_str = "n.d."
+    return f"{channel}. ({date_str}). *{title}* [Video]. YouTube. {url}"
+
+
+def format_obsidian_note(
+    summary: VideoSummary, url: str, upload_date: str | None = None
+) -> str:
     """Format the summary into an Obsidian markdown note."""
     today = date.today().isoformat()
     concepts = "\n".join(
         [f"- **{c.timestamp}**: {c.concept}" for c in summary.key_concepts]
     )
     quotes = "\n".join([f"> {q}" for q in summary.key_quotes])
+    citation = _format_apa_citation(
+        summary.channel, upload_date, summary.video_title, url
+    )
 
     note = f"""---
 date: {today}
@@ -100,6 +118,9 @@ video_title: "{summary.video_title}"
 channel: "{summary.channel}"
 category: "[[YouTube]]"
 ---
+
+## Citation
+{citation}
 
 # {summary.video_title}
 
@@ -182,7 +203,9 @@ def summarize(
         console.print(f"[red]Error during LLM processing: {e}[/red]")
         raise typer.Exit(1)
 
-    note_content = format_obsidian_note(summary, url)
+    note_content = format_obsidian_note(
+        summary, url, upload_date=video_info.get("upload_date")
+    )
 
     if dry_run:
         console.print("\n[bold yellow][dry-run] Generated Note:[/bold yellow]")
