@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 import pytest
 from typer.testing import CliRunner
-from yt_transcription_summarizer.logic import (
+from yt_transcription_summarizer.cli import (
     app,
     extract_video_id,
     format_obsidian_note,
@@ -62,10 +62,10 @@ def test_format_obsidian_note_with_upload_date():
     assert "*Never Gonna Give You Up* [Video]. YouTube." in note
 
 
-@patch("yt_transcription_summarizer.logic.get_transcript")
-@patch("yt_transcription_summarizer.logic.get_video_info")
-@patch("yt_transcription_summarizer.logic.resolve_provider")
-@patch("yt_transcription_summarizer.logic.timed_run")
+@patch("yt_transcription_summarizer.cli.get_transcript")
+@patch("yt_transcription_summarizer.cli.get_video_info")
+@patch("yt_transcription_summarizer.cli.resolve_provider")
+@patch("yt_transcription_summarizer.cli.timed_run")
 def test_summarize_command(
     mock_timed_run, mock_resolve_provider, mock_get_info, mock_get_transcript
 ):
