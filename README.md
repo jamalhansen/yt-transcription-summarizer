@@ -6,6 +6,7 @@ Fetches a YouTube transcript, extracts key concepts with timestamps, and generat
 - **Transcript Fetching**: Automatically retrieves transcripts using `youtube-transcript-api`.
 - **Metadata Extraction**: Uses `yt-dlp` for video titles and channel names.
 - **Timestamped Concepts**: Correlates key concepts with specific parts of the video.
+- **APA 7 Citation**: Generates a citation (channel, upload date, title, URL) in a Citation section at the top of the note.
 - **Obsidian Integration**: Saves notes with YAML frontmatter directly to your vault.
 
 ## Installation
