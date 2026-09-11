@@ -1,6 +1,6 @@
 import re
-from datetime import date, datetime
-from typing import Any, Dict
+from datetime import datetime
+from typing import Any
 
 import yt_dlp
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -37,7 +37,7 @@ def extract_video_id(url: str) -> str:
     raise ValueError(f"Could not extract video ID from URL: {url}")
 
 
-def get_video_info(url: str) -> Dict[str, Any]:
+def get_video_info(url: str) -> dict[str, Any]:
     """Get video metadata using yt-dlp."""
     ydl_opts = {"quiet": True, "no_warnings": True}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -56,7 +56,7 @@ def get_transcript(video_id: str) -> str:
     try:
         fetched = YouTubeTranscriptApi().fetch(video_id)
         return " ".join([snippet.text for snippet in fetched])
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - translating an arbitrary library error into a domain-specific message
         raise RuntimeError(f"Failed to fetch transcript: {e}")
 
 
@@ -65,7 +65,7 @@ def _format_apa_citation(
 ) -> str:
     """Build an APA 7 citation for a YouTube video."""
     if upload_date:
-        d = datetime.strptime(upload_date, "%Y%m%d")
+        d = datetime.strptime(upload_date, "%Y%m%d")  # noqa: DTZ007 - YYYYMMDD from YouTube carries no timezone; this is a pure calendar date, never used as an instant
         date_str = d.strftime("%Y, %B ") + str(d.day)
     else:
         date_str = "n.d."
@@ -76,7 +76,7 @@ def format_obsidian_note(
     summary: VideoSummary, url: str, upload_date: str | None = None
 ) -> str:
     """Format the summary into an Obsidian markdown note."""
-    today = date.today().isoformat()
+    today = datetime.now().astimezone().date().isoformat()
     concepts = "\n".join(
         [f"- **{c.timestamp}**: {c.concept}" for c in summary.key_concepts]
     )

@@ -1,12 +1,14 @@
 from unittest.mock import MagicMock, patch
+
 import pytest
 from typer.testing import CliRunner
+
 from yt_transcription_summarizer.cli import (
     app,
     extract_video_id,
     format_obsidian_note,
 )
-from yt_transcription_summarizer.schema import VideoSummary, TimestampedConcept
+from yt_transcription_summarizer.schema import TimestampedConcept, VideoSummary
 
 runner = CliRunner()
 

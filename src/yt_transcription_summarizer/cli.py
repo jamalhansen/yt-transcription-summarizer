@@ -1,35 +1,34 @@
 import os
 import re
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
+from local_first_common.cli import (
+    debug_option,
+    dry_run_option,
+    model_option,
+    no_llm_option,
+    provider_option,
+    resolve_dry_run,
+    resolve_provider,
+    verbose_option,
+)
+from local_first_common.providers import PROVIDERS
+from local_first_common.tracking import register_tool, timed_run
 from rich.console import Console
 
-from local_first_common.providers import PROVIDERS
-from local_first_common.cli import (
-    provider_option,
-    model_option,
-    dry_run_option,
-    no_llm_option,
-    verbose_option,
-    debug_option,
-    resolve_provider,
-    resolve_dry_run,
-)
-from local_first_common.tracking import register_tool, timed_run
-
-from .schema import VideoSummary
-from .prompts import build_system_prompt, build_user_prompt
 from .core import (
-    VideoFetchError,
-    ProviderSetupError,
     LLMRunError,
+    ProviderSetupError,
+    VideoFetchError,
     extract_video_id,
-    get_video_info,
-    get_transcript,
     format_obsidian_note,
+    get_transcript,
+    get_video_info,
 )
+from .prompts import build_system_prompt, build_user_prompt
+from .schema import VideoSummary
 
 _TOOL = register_tool("yt-transcription-summarizer")
 
@@ -42,13 +41,13 @@ app = typer.Typer(
 @app.command()
 def summarize(
     url: str = typer.Argument(..., help="YouTube video URL."),
-    output_dir: Optional[Path] = typer.Option(
-        None, "--output", "-o", help="Target folder for the note."
-    ),
+    output_dir: Annotated[
+        Path | None, typer.Option("--output", "-o", help="Target folder for the note.")
+    ] = None,
     provider: Annotated[str, provider_option(PROVIDERS)] = os.environ.get(
         "MODEL_PROVIDER", "ollama"
     ),
-    model: Annotated[Optional[str], model_option()] = None,
+    model: Annotated[str | None, model_option()] = None,
     dry_run: Annotated[bool, dry_run_option()] = False,
     no_llm: Annotated[bool, no_llm_option()] = False,
     verbose: Annotated[bool, verbose_option()] = False,
@@ -69,7 +68,7 @@ def summarize(
     except VideoFetchError as e:
         console.print(f"[red]Error fetching video data: {e}[/red]")
         raise typer.Exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - top-level CLI boundary: report cleanly and exit, don't show a raw traceback
         console.print(f"[red]Error fetching video data: {e}[/red]")
         raise typer.Exit(1)
 
@@ -78,7 +77,7 @@ def summarize(
     except ProviderSetupError as e:
         console.print(f"[red]Error initializing provider: {e}[/red]")
         raise typer.Exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - top-level CLI boundary: report cleanly and exit, don't show a raw traceback
         console.print(f"[red]Error initializing provider: {e}[/red]")
         raise typer.Exit(1)
 
@@ -102,7 +101,7 @@ def summarize(
     except LLMRunError as e:
         console.print(f"[red]Error during LLM processing: {e}[/red]")
         raise typer.Exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - top-level CLI boundary: report cleanly and exit, don't show a raw traceback
         console.print(f"[red]Error during LLM processing: {e}[/red]")
         raise typer.Exit(1)
 
