@@ -73,7 +73,7 @@ def summarize(
         raise typer.Exit(1)
 
     try:
-        llm = resolve_provider(PROVIDERS, provider, model, debug=debug, no_llm=no_llm)
+        llm = resolve_provider(PROVIDERS, provider, model, debug=debug, no_llm=no_llm, tool_name="yt-transcription-summarizer")
     except ProviderSetupError as e:
         console.print(f"[red]Error initializing provider: {e}[/red]")
         raise typer.Exit(1)
