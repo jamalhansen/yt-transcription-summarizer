@@ -67,9 +67,8 @@ def test_format_obsidian_note_with_upload_date():
 @patch("yt_transcription_summarizer.cli.get_transcript")
 @patch("yt_transcription_summarizer.cli.get_video_info")
 @patch("yt_transcription_summarizer.cli.resolve_provider")
-@patch("yt_transcription_summarizer.cli.timed_run")
 def test_summarize_command(
-    mock_timed_run, mock_resolve_provider, mock_get_info, mock_get_transcript
+    mock_resolve_provider, mock_get_info, mock_get_transcript
 ):
     mock_get_info.return_value = {
         "title": "Test Video",
@@ -90,7 +89,6 @@ def test_summarize_command(
         key_quotes=["Quote 1", "Quote 2", "Quote 3"],
     )
     mock_resolve_provider.return_value = mock_llm
-    mock_timed_run.return_value.__enter__.return_value = MagicMock()
 
     result = runner.invoke(
         app, ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "--no-llm", "--dry-run"]

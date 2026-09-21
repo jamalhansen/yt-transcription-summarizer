@@ -15,7 +15,7 @@ from local_first_common.cli import (
     verbose_option,
 )
 from local_first_common.providers import PROVIDERS
-from local_first_common.tracking import register_tool, timed_run
+from local_first_common.tracking import register_tool
 from rich.console import Console
 
 from .core import (
@@ -87,17 +87,15 @@ def summarize(
     if verbose:
         console.print(f"Summarizing using {llm.model}...")
 
+    llm.source_location = url
+    llm.item_count = 1
     try:
-        with timed_run(
-            "yt-transcription-summarizer", llm.model, source_location=url
-        ) as run:
-            response = llm.complete(system, user, response_model=VideoSummary)
-            summary = (
-                response
-                if isinstance(response, VideoSummary)
-                else VideoSummary(**response)
-            )
-            run.item_count = 1
+        response = llm.complete(system, user, response_model=VideoSummary)
+        summary = (
+            response
+            if isinstance(response, VideoSummary)
+            else VideoSummary(**response)
+        )
     except LLMRunError as e:
         console.print(f"[red]Error during LLM processing: {e}[/red]")
         raise typer.Exit(1)
