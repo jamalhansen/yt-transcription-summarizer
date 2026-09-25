@@ -1,4 +1,4 @@
-from yt_transcription_summarizer.logic import (
+from yt_transcription_summarizer.core import (
     LLMRunError,
     ProviderSetupError,
     VideoFetchError,
