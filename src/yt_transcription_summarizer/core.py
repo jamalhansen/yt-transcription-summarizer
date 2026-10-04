@@ -56,8 +56,8 @@ def get_transcript(video_id: str) -> str:
     try:
         fetched = YouTubeTranscriptApi().fetch(video_id)
         return " ".join([snippet.text for snippet in fetched])
-    except Exception as e:  # noqa: BLE001 - translating an arbitrary library error into a domain-specific message
-        raise RuntimeError(f"Failed to fetch transcript: {e}")
+    except Exception as e:  # translating an arbitrary library error into a domain-specific message
+        raise RuntimeError(f"Failed to fetch transcript: {e}") from e
 
 
 def _format_apa_citation(

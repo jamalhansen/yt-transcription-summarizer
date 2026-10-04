@@ -67,19 +67,19 @@ def summarize(
         transcript = get_transcript(video_id)
     except VideoFetchError as e:
         console.print(f"[red]Error fetching video data: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except Exception as e:  # noqa: BLE001 - top-level CLI boundary: report cleanly and exit, don't show a raw traceback
         console.print(f"[red]Error fetching video data: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     try:
         llm = resolve_provider(PROVIDERS, provider, model, debug=debug, no_llm=no_llm, tool_name="yt-transcription-summarizer")
     except ProviderSetupError as e:
         console.print(f"[red]Error initializing provider: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except Exception as e:  # noqa: BLE001 - top-level CLI boundary: report cleanly and exit, don't show a raw traceback
         console.print(f"[red]Error initializing provider: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     system = build_system_prompt()
     user = build_user_prompt(video_info, transcript)
@@ -98,10 +98,10 @@ def summarize(
         )
     except LLMRunError as e:
         console.print(f"[red]Error during LLM processing: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except Exception as e:  # noqa: BLE001 - top-level CLI boundary: report cleanly and exit, don't show a raw traceback
         console.print(f"[red]Error during LLM processing: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     note_content = format_obsidian_note(
         summary, url, upload_date=video_info.get("upload_date")
