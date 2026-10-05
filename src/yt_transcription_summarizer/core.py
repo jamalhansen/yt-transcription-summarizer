@@ -60,9 +60,7 @@ def get_transcript(video_id: str) -> str:
         raise RuntimeError(f"Failed to fetch transcript: {e}") from e
 
 
-def _format_apa_citation(
-    channel: str, upload_date: str | None, title: str, url: str
-) -> str:
+def _format_apa_citation(channel: str, upload_date: str | None, title: str, url: str) -> str:
     """Build an APA 7 citation for a YouTube video."""
     if upload_date:
         d = datetime.strptime(upload_date, "%Y%m%d")  # noqa: DTZ007 - YYYYMMDD from YouTube carries no timezone; this is a pure calendar date, never used as an instant
@@ -72,18 +70,12 @@ def _format_apa_citation(
     return f"{channel}. ({date_str}). *{title}* [Video]. YouTube. {url}"
 
 
-def format_obsidian_note(
-    summary: VideoSummary, url: str, upload_date: str | None = None
-) -> str:
+def format_obsidian_note(summary: VideoSummary, url: str, upload_date: str | None = None) -> str:
     """Format the summary into an Obsidian markdown note."""
     today = datetime.now().astimezone().date().isoformat()
-    concepts = "\n".join(
-        [f"- **{c.timestamp}**: {c.concept}" for c in summary.key_concepts]
-    )
+    concepts = "\n".join([f"- **{c.timestamp}**: {c.concept}" for c in summary.key_concepts])
     quotes = "\n".join([f"> {q}" for q in summary.key_quotes])
-    citation = _format_apa_citation(
-        summary.channel, upload_date, summary.video_title, url
-    )
+    citation = _format_apa_citation(summary.channel, upload_date, summary.video_title, url)
 
     note = f"""---
 date: {today}

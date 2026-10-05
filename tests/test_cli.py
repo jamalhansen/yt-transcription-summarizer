@@ -14,9 +14,7 @@ runner = CliRunner()
 
 
 def test_extract_video_id():
-    assert (
-        extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ") == "dQw4w9WgXcQ"
-    )
+    assert extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ") == "dQw4w9WgXcQ"
     assert extract_video_id("https://youtu.be/dQw4w9WgXcQ") == "dQw4w9WgXcQ"
     with pytest.raises(ValueError):
         extract_video_id("invalid-url")
@@ -67,9 +65,7 @@ def test_format_obsidian_note_with_upload_date():
 @patch("yt_transcription_summarizer.cli.get_transcript")
 @patch("yt_transcription_summarizer.cli.get_video_info")
 @patch("yt_transcription_summarizer.cli.resolve_provider")
-def test_summarize_command(
-    mock_resolve_provider, mock_get_info, mock_get_transcript
-):
+def test_summarize_command(mock_resolve_provider, mock_get_info, mock_get_transcript):
     mock_get_info.return_value = {
         "title": "Test Video",
         "channel": "Test Channel",
@@ -90,9 +86,7 @@ def test_summarize_command(
     )
     mock_resolve_provider.return_value = mock_llm
 
-    result = runner.invoke(
-        app, ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "--no-llm", "--dry-run"]
-    )
+    result = runner.invoke(app, ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "--no-llm", "--dry-run"])
 
     assert result.exit_code == 0
     assert "Test Video" in result.stdout

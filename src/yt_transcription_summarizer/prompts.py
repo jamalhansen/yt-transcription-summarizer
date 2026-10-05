@@ -11,10 +11,11 @@ INSTRUCTIONS:
    - Timestamps must be in HH:MM:SS or MM:SS format.
 """
 
+
 def build_user_prompt(video_info: dict, transcript: str) -> str:
-    return f"""VIDEO TITLE: {video_info.get('title')}
-CHANNEL: {video_info.get('channel')}
-URL: {video_info.get('url')}
+    return f"""VIDEO TITLE: {video_info.get("title")}
+CHANNEL: {video_info.get("channel")}
+URL: {video_info.get("url")}
 
 TRANSCRIPT:
 {transcript}

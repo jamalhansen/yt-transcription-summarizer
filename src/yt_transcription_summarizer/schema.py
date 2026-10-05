@@ -1,10 +1,10 @@
-
 from pydantic import BaseModel, Field
 
 
 class TimestampedConcept(BaseModel):
     timestamp: str = Field(..., description="Timestamp in format HH:MM:SS or MM:SS")
     concept: str
+
 
 class VideoSummary(BaseModel):
     video_title: str

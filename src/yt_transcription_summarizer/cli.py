@@ -41,12 +41,8 @@ app = typer.Typer(
 @app.command()
 def summarize(
     url: str = typer.Argument(..., help="YouTube video URL."),
-    output_dir: Annotated[
-        Path | None, typer.Option("--output", "-o", help="Target folder for the note.")
-    ] = None,
-    provider: Annotated[str, provider_option(PROVIDERS)] = os.environ.get(
-        "MODEL_PROVIDER", "ollama"
-    ),
+    output_dir: Annotated[Path | None, typer.Option("--output", "-o", help="Target folder for the note.")] = None,
+    provider: Annotated[str, provider_option(PROVIDERS)] = os.environ.get("MODEL_PROVIDER", "ollama"),
     model: Annotated[str | None, model_option()] = None,
     dry_run: Annotated[bool, dry_run_option()] = False,
     no_llm: Annotated[bool, no_llm_option()] = False,
@@ -73,7 +69,9 @@ def summarize(
         raise typer.Exit(1) from None
 
     try:
-        llm = resolve_provider(PROVIDERS, provider, model, debug=debug, no_llm=no_llm, tool_name="yt-transcription-summarizer")
+        llm = resolve_provider(
+            PROVIDERS, provider, model, debug=debug, no_llm=no_llm, tool_name="yt-transcription-summarizer"
+        )
     except ProviderSetupError as e:
         console.print(f"[red]Error initializing provider: {e}[/red]")
         raise typer.Exit(1) from None
@@ -91,11 +89,7 @@ def summarize(
     llm.item_count = 1
     try:
         response = llm.complete(system, user, response_model=VideoSummary)
-        summary = (
-            response
-            if isinstance(response, VideoSummary)
-            else VideoSummary(**response)
-        )
+        summary = response if isinstance(response, VideoSummary) else VideoSummary(**response)
     except LLMRunError as e:
         console.print(f"[red]Error during LLM processing: {e}[/red]")
         raise typer.Exit(1) from None
@@ -103,9 +97,7 @@ def summarize(
         console.print(f"[red]Error during LLM processing: {e}[/red]")
         raise typer.Exit(1) from None
 
-    note_content = format_obsidian_note(
-        summary, url, upload_date=video_info.get("upload_date")
-    )
+    note_content = format_obsidian_note(summary, url, upload_date=video_info.get("upload_date"))
 
     if dry_run:
         console.print("\n[bold yellow][dry-run] Generated Note:[/bold yellow]")
@@ -113,17 +105,13 @@ def summarize(
     else:
         vault_path_str = os.getenv("OBSIDIAN_VAULT_PATH")
         if not vault_path_str:
-            console.print(
-                "[red]Error: OBSIDIAN_VAULT_PATH not set. Printing to stdout.[/red]"
-            )
+            console.print("[red]Error: OBSIDIAN_VAULT_PATH not set. Printing to stdout.[/red]")
             console.print(note_content)
             return
 
         vault_path = Path(vault_path_str)
         target_path = (
-            output_dir
-            if output_dir and output_dir.is_absolute()
-            else (vault_path / (output_dir or "youtube"))
+            output_dir if output_dir and output_dir.is_absolute() else (vault_path / (output_dir or "youtube"))
         )
         target_path.mkdir(parents=True, exist_ok=True)
 
