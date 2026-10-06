@@ -39,8 +39,7 @@ def extract_video_id(url: str) -> str:
 
 def get_video_info(url: str) -> dict[str, Any]:
     """Get video metadata using yt-dlp."""
-    ydl_opts = {"quiet": True, "no_warnings": True}
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+    with yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True}) as ydl:
         info = ydl.extract_info(url, download=False)
         return {
             "title": info.get("title"),
